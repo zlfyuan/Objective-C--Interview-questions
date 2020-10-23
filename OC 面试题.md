@@ -1,4 +1,10 @@
 # OC 面试题
+
+一张非常经典的描述instance对象、类对象以及元类对象之间关系的图片。途中虚线代表isa指针，实线代表superClass指针。
+![](https://user-gold-cdn.xitu.io/2019/12/27/16f47b9aa164204d?imageView2/0/w/1280/h/960/format/webp/ignore-error/1)
+
+
+
 #### 1. OC 系统对象的 copy 与 mutableCopy 方法
 
 * 非集合类对象的copy与mutableCopy
@@ -77,31 +83,7 @@
 #### 9.Runloop
 [RunLoop](https://blog.ibireme.com/2015/05/18/runloop/)
 
-#### 10. KVO & KVC
-* KVO定义
-	- KVO 即 Key-Value Observing，翻译成键值观察。它是一种观察者模式的衍生。其基本思想是，对目标对象的某属性添加观察，当该属性发生变化时，通过触发观察者对象实现的KVO接口方法，来自动的通知观察者。
-
-	- （KVO） 观察者模式的一种，
-一个目标对象管理所有依赖于它的观察者对象，并在它自身的状态改变时主动通知观察者对象。这个主动通知通常是通过调用各观察者对象所提供的接口方法来实现的。观察者模式较完美地将目标对象与观察者对象解耦。
-
-	- 简单来说KVO可以通过监听key，来获得value的变化，用来在对象之间监听状态变化。KVO的定义都是对NSObject的扩展来实现的，Objective-C中有个显式的NSKeyValueObserving类别名，所以对于所有继承了NSObject的类型，都能使用KVO(一些纯Swift类和结构体是不支持KVC的，因为没有继承NSObject)。
-
-	- KVO 是通过 isa-swizzling 实现的。
-基本的流程就是编译器自动为被观察对象创造一个派生类，并将被观察对象的isa 指向这个派生类。如果用户注册了对某此目标对象的某一个属性的观察，那么此派生类会重写这个方法，并在其中添加进行通知的代码。Objective-C 在发送消息的时候，会通过 isa 指针找到当前对象所属的类对象。而类对象中保存着当前对象的实例方法，因此在向此对象发送消息时候，实际上是发送到了派生类对象的方法。由于编译器对派生类的方法进行了 override，并添加了通知代码，因此会向注册的对象发送通知。注意派生类只重写注册了观察者的属性方法。
-
-* KVC定义
-
-	- KVC（Key-value coding）键值编码，就是指iOS的开发中，可以允许开发者通过Key名直接访问对象的属性，或者给对象的属性赋值。而不需要调用明确的存取方法。这样就可以在运行时动态地访问和修改对象的属性。而不是在编译时确定，这也是iOS开发中的黑魔法之一。很多高级的iOS开发技巧都是基于KVC实现的。
-	
-	- 在实现了访问器方法的类中，使用点语法和KVC访问对象其实差别不大，二者可以任意混用。但是没有访问起方法的类中，点语法无法使用，这时KVC就有优势了。
-	- KVC的定义都是对NSObject的扩展来实现的，Objective-C中有个显式的NSKeyValueCoding类别名，所以对于所有继承了NSObject的类型，都能使用KVC(一些纯Swift类和结构体是不支持KVC的，因为没有继承NSObject)，
-
-* KVC 与 KVO 的不同？
-	- KVC(键值编码)，即 Key-Value Coding，一个非正式的 Protocol，使用字符串(键)访问一个对象实例变量的机制。而不是通过调用 Setter、Getter 方法等显式的存取方式去访问。
-	
-	- KVO(键值监听)，即 Key-Value Observing，它提供一种机制,当指定的对象的属性被修改后,对象就会接受到通知，前提是执行了 setter 方法、或者使用了 KVC 赋值。
-	
-#### 11.单利模式 
+#### 10.单利模式 
 * 单例模式的作用
 	- 可以保证在程序运行过程，一个类只有一个实例，而且该实例易于供外界访问
 从而方便地控制了实例个数，并节约系统资源
@@ -119,4 +101,98 @@
 		- 单例对象一旦建立，对象指针是保存在静态区的，单例对象在堆中分配的内存空间，会在应用程序终止后才会被释放。
 		- 单例类无法继承，因此很难进行类的扩展。
 		- 单例不适用于变化的对象，如果同一类型的对象总是要在不同的用例场景发生变化，单例就会引起数据的错误，不能保存彼此的状态。
+
+#### 11. KVO
+* `KVO全称KeyValueObserving`，是苹果提供的一套事件通知机制。允许监听对象特定属性的改变，并在改变时接收到事件。
+* 本质：利用runtimeAPI动态生成一个子类，并让instance对象的isa指向这个全新的子类，当修改instance对象的属性时，在全新的子类重写set并调用willChangeValueForKey和didChangeValueForKey并调用内部会触发监听器的监听方法（observerValueForKeyPath:）
+
+* 区别:
+    - KVO和NSNotificationCenter都是iOS中观察者模式的一种实现。
+
+    - 相对于被观察者和观察者之间的关系，KVO是一对一的，而NSNotificationCenter一对多的。
+
+    - KVO对被监听对象无侵入性，不需要修改其内部代码即可实现监听。
+
+    - KVO可以监听单个属性的变化，也可以监听集合对象的变化。(通过KVC的mutableArrayValueForKey)
+* KVO的触发模式 
+    - 在将要观察的对象里添加`+(BOOL)automaticallyNotifiesObserversForKey:(NSString *)key`  `(return YES;//默认，自动模式)  (return NO;//手动模式)`
+
+    - 在属性变化前，调用`willChangeValueForKey`
+
+    - 在属性变化后，调用`didChangeValueForKey`
+    
+    - 无论属性的值是否发生改变,是否调用Setter方法，只要调用了`willChangeValueForKey`和`didChangeValueForKey`就会触发回调
+* KVO原理
+    - KVO 底层实现：首先KVO需要创建一个子类(NSKVONotyfing_Class)，这个子类是继承于被观察对象的，这个子类需要重写属性的setter方法，这个时候，外界在调用setter方法的时候，调用的是子类重写的setter方法。就是让外界的Class的对象的isa指针指向这个子类
+
+    - 官文指出KVO的实现，使用了isa-swizzling。当一个object被观察后，该object的 isa 指针将会被修改指向新生成的中间类，而非之前的类；
+    ![](https://img2020.cnblogs.com/blog/764024/202004/764024-20200416095844348-793562801.png)
+
+* 注意点
+    - 成员变量不能使用KVO，KVO的本质是动态生成一个子类，重写父类的setter方法，实现新值旧值的回调，而成员变量的修改不是setter方法赋值，成员变量没有setter
+
+    - 手动创建`NSKVONotyfing_Class`,KVO不能生效，但是可以编译通过。系统生成的`NSKVONotyfing_Class`是运行时动态创建的
+
+#### 12. KVC
+* `KVC(KeyValueCoding)`键值编码，可以动态地访问和修改对象的属性，简单的来说，就是通过对象的属性名（key）给属性赋值，也可以通过属性名（key）获取值。
+
+* 底层的执行机制(赋值操作)
+    - 当调用setValue：属性值 forKey：@”name“的代码时，如下：
+
+    - 程序优先调用`set<Key>:`属性值方法，代码通过`setter`方法完成设置
+
+    - 如果没有找到`setName：`方法，KVC机制会检查`+ (BOOL)accessInstanceVariablesDirectly`方法有没有返回YES，默认该方法会返回YES，如果你重写了该方法让其返回NO的话，那么在这一步KVC会执行`setValue：forUndefinedKey：`方法，不过一般开发者不会这么做。所以KVC机制会搜索该类里面有没有名为`_<key>`的成员变量，无论该变量是在类接口处定义，还是在类实现处定义，也无论用了什么样的访问修饰符，只在存在以`_<key>`命名的变量，KVC都可以对该成员变量赋值。
+
+    - 如果该类即没有`set<key>：`方法，也没有`_<key>`成员变量，KVC机制会搜索`_is<Key>`的成员变量。
+
+    - 如果该类即没有`set<Key>：`方法，也没有`_<key>`和`_is<Key>`成员变量，KVC机制再会继续搜索`<key>`和`is<Key>`的成员变量。再给它们赋值。
+
+    - 如果上面列出的方法或者成员变量都不存在，系统将会执行该对象的`setValue：forUndefinedKey：`方法，默认是抛出异常。
+
+* 底层的执行机制(取值操作)
+    - 当调用`valueForKey：@”name“`的代码
+
+    - 首先按`get<Key>`,`<key>`,`is<Key>`的顺序方法查找getter方法，找到的话会直接调用。如果是BOOL或者Int等值类型， 会将其包装成一个NSNumber对象。
+    
+    - 如果上面的`getter`没有找到，KVC则会查找`countOf<Key>`,`objectIn<Key>AtIndex`或`<Key>AtIndexes`格式的方法。如果`countOf<Key>`方法和另外两个方法中的一个被找到，那么就会返回一个可以响应NSArray所有方法的代理集合(它是NSKeyValueArray，是NSArray的子类)，调用这个代理集合的方法，或者说给这个代理集合发送属于NSArray的方法，就会以`countOf<Key>`,`objectIn<Key>AtIndex`或`<Key>AtIndexes`这几个方法组合的形式调用。还有一个可选的`get<Key>:range:`方法。所以你想重新定义KVC的一些功能，你可以添加这些方法，需要注意的是你的方法名要符合KVC的标准命名方法，包括方法签名。
+
+    - 如果上面的方法没有找到，那么会同时查找`countOf<Key>`，`enumeratorOf<Key>`,`memberOf<Key>`格式的方法。如果这三个方法都找到，那么就返回一个可以响应NSSet所的方法的代理集合，和上面一样，给这个代理集合发NSSet的消息，就会以`countOf<Key>`，`enumeratorOf<Key>`,`memberOf<Key>`组合的形式调用。
+
+    - 如果还没有找到，再检查类方法`+ (BOOL)accessInstanceVariablesDirectly`,如果返回YES(默认行为)，那么和先前的设值一样，会按`_<key>`,`_is<Key>`,`<key>`,`is<Key>`的顺序搜索成员变量名，这里不推荐这么做，因为这样直接访问实例变量破坏了封装性，使代码更脆弱。如果重写了类方法`+ (BOOL)accessInstanceVariablesDirectly`返回NO的话，那么会直接调用`valueForUndefinedKey`:
+
+    - 还没有找到的话，调用`valueForUndefinedKey`:
+
+* KVC常用场景
+    - 运行时动态地取值和赋值
+    - 用KVC来访问和修改私有变量
+    - Model和字典转换
+    - 修改控件的内部属性
+
+#### 13.Category 的实现过程？
+* Category，可以动态的为已经存在的类添加新的行为。这样可以保证类的原始设计规模较小，功能增加时再逐步扩展。使用Category对类进行扩展时，不需要访问其源代码，也不需要创建子类。Category使用简单的方式，实现了类的相关方法的模块化，把不同的类方法分配到不同的分类文件中。
+
+* 如果发生方法与原始类重名，则优先加载分类里的方法 `(分类是在main函数之前、初始化runtime库的时候加载的)`
+
+* Category 本质是一个结构体（Category_t），通过runtime与原始类合并，新添加的方法会倒序插入到原始类方法列表的最前面，所以说当出现重名，实际上加载的方法是最后一个被添加的方法,举个例子👇
+	```swift
+	原方法列表
+	[1,2,3,4,5,6] 
+	分类新加的方法列表
+	[1,1,13,2] 
+	倒序插入
+	[2,13,1,1,1,2,3,4,5,6] 
+	方法查询 查找名为2的方法，那么第一个2就会被加载 所以分类的优先级高
+	```
+* 不能添加属性变量和实例变量，无法生成`getter`和`setter`，类内存布局在编译时期就确定了，而`CateGory`是在运行时才加载的 。 但是利用`runtime`关联对象可以添加属性变量，在`runtime`中存在一个类型为`AssociationHashMap`的哈希映射表保存着对象动态添加的属性，每个对象以自身地址为`key`维护着一个绑定属性表，我们动态添加的属性就都存储在这个表里
+
+#### Obj-C 中的类信息存放在哪里？
+
+* 类方法存储在元类。
+	- 对象方法、属性、成员变量、协议等存放在 Class 对象中。
+
+	- 类方法存放在 meta-class 对象中。
+	
+	- 成员变量的具体指，存放在 instance 对象中。
+
+
 
