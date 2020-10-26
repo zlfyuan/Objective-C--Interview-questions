@@ -185,7 +185,7 @@
 	```
 * 不能添加属性变量和实例变量，无法生成`getter`和`setter`，类内存布局在编译时期就确定了，而`CateGory`是在运行时才加载的 。 但是利用`runtime`关联对象可以添加属性变量，在`runtime`中存在一个类型为`AssociationHashMap`的哈希映射表保存着对象动态添加的属性，每个对象以自身地址为`key`维护着一个绑定属性表，我们动态添加的属性就都存储在这个表里
 
-#### Obj-C 中的类信息存放在哪里？
+#### 14.Obj-C 中的类信息存放在哪里？
 
 * 类方法存储在元类。
 	- 对象方法、属性、成员变量、协议等存放在 Class 对象中。
@@ -194,5 +194,47 @@
 	
 	- 成员变量的具体指，存放在 instance 对象中。
 
+#### 15.@autoreleasepool 自动释放池
+* 概念：AppKit 和 UIKit 框架在事件循环(RunLoop)的每次循环开始时，在主线程创建一个自动释放池，并在每次循环结束时销毁它，在销毁时释放自动释放池中的所有autorelease对象
 
+* ARC 环境下，autorelease 对象在什么时候释放？
+    - 系统干预释放: 由`RunLoop`控制的，会在当前`RunLoop`每次循环结束时释放。
+    - 手动干预释: 在`@autoreleasepool`大括号结束时就会释放，不受`RunLoop`控制。
 
+* @autoreleasepool 使用场景 （Apple文档描述）
+    - ① 如果你编写的程序不是基于 UI 框架的，比如说命令行工具；
+    - ② 如果你编写的循环中创建了大量的临时对象；
+你可以在循环内使用`@autoreleasepool`在下一次迭代之前处理这些对象。在循环中使用`@autoreleasepool`有助于减少应用程序的最大内存占用。
+    - ③ 如果你创建了辅助线程。
+一旦线程开始执行，就必须创建自己的`@autoreleasepool`；否则，你的应用程序将存在内存泄漏。
+
+#### 16. Dealloc 的实现机制
+* 1.Dealloc 调用流程
+
+    - 1.首先调用 _objc_rootDealloc()
+    - 2.接下来调用 rootDealloc()
+    - 3.这时候会判断是否可以被释放，判断的依据主要有5个，判断是否有以上五种情况
+        - NONPointer_ISA
+        - weakly_reference
+        - has_assoc
+        - has_cxx_dtor
+        - has_sidetable_rc
+    - 4-1.如果有以上五中任意一种，将会调用 object_dispose()方法，做下一步的处理。
+    - 4-2.如果没有之前五种情况的任意一种，则可以执行释放操作，C函数的 free()。
+    - 5.执行完毕。
+* 2.object_dispose() 调用流程。
+
+    - 1.直接调用 objc_destructInstance()。
+    - 2.之后调用 C函数的 free()。
+* 3.objc_destructInstance() 调用流程
+
+    - 1.先判断 hasCxxDtor，如果有 C++ 的相关内容，要调用 object_cxxDestruct() ，销毁 C++ 相关的内容。
+    - 2.再判断 hasAssocitatedObjects，如果有的话，要调用 object_remove_associations()，销毁关联对象的一系列操作。
+    - 3.然后调用 clearDeallocating()。
+    - 4.执行完毕。
+* 4.clearDeallocating() 调用流程。
+
+    - 1.先执行 sideTable_clearDellocating()。
+    - 2.再执行 weak_clear_no_lock,在这一步骤中，会将指向该对象的弱引用指针置为 nil。
+    - 3.接下来执行 table.refcnts.eraser()，从引用计数表中擦除该对象的引用计数。
+    - 4.至此为止，Dealloc 的执行流程结束。
