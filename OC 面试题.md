@@ -238,6 +238,7 @@
     - 2.再执行 weak_clear_no_lock,在这一步骤中，会将指向该对象的弱引用指针置为 nil。
     - 3.接下来执行 table.refcnts.eraser()，从引用计数表中擦除该对象的引用计数。
     - 4.至此为止，Dealloc 的执行流程结束。
+
 #### 17.Runloop 和线程的关系
 
 * 一个线程对应一个 Runloop。
@@ -248,6 +249,22 @@
 
 * Runloop 存储在一个全局的可变字典里，线程是 key ，Runloop 是 value。
 
-#### 18.[[WKWebView 那些坑]](https://mp.weixin.qq.com/s/rhYKLIbXOsUJC_n6dt9UfA)
 
-#### 19.
+#### 18.[[WKWebView 那些坑]](https://mp.weixin.qq.com/s/rhYKLIbXOsUJC_n6dt9UfA)
+	
+#### 19.xib拖出的控件属性为什么要weak修饰？还有Delegate
+
+> 因为会造成循环引用 ，出现释放问题
+* ViewController-->View-->subviews-->控件-->ViewController
+* ViewController-->TableView-->DataSource-->ViewController
+
+> delegate 
+weak：修饰对象只是指明该对象，并不负责保持这个对象，对象的销毁是由外部控制的。
+
+> delegate 
+strong：修饰对象是对该对象进行强引用，外界不能销毁该对象，会导致循环引用（Retain Cycles）
+
+#### 20.显示动画和隐式动画的区别？
+* 显式动画就是需要我们明确指定类型、时间等参数来实现效果的动画。例如：CABasicAnimation，CAKeyframeAnimation，CATransitionAnimation，CAAnimationGroup
+* 隐式动画是指我们可以在不设定任何动画类型的情况下，仅仅改变CALayer的一个可做动画的属性，就能实现动画效果。例如： 改变一个控件的颜色，官方默认有0.25的过渡时间，具体可以查看这个[资料](https://cloud.tencent.com/developer/article/1418000)
+
