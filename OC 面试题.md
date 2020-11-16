@@ -238,3 +238,16 @@
     - 2.再执行 weak_clear_no_lock,在这一步骤中，会将指向该对象的弱引用指针置为 nil。
     - 3.接下来执行 table.refcnts.eraser()，从引用计数表中擦除该对象的引用计数。
     - 4.至此为止，Dealloc 的执行流程结束。
+#### 17.Runloop 和线程的关系
+
+* 一个线程对应一个 Runloop。
+
+* 主线程的默认就有了 Runloop。
+
+* 子线程的 Runloop 以懒加载的形式创建。
+
+* Runloop 存储在一个全局的可变字典里，线程是 key ，Runloop 是 value。
+
+#### 18.[[WKWebView 那些坑]](https://mp.weixin.qq.com/s/rhYKLIbXOsUJC_n6dt9UfA)
+
+#### 19.
