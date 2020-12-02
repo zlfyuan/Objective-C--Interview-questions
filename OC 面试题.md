@@ -80,6 +80,17 @@
 
 * UIView和CALayer是相互依赖的关系。UIView依赖CALayer提供的内容，CALayer依赖UIView提供的容器来显示绘制的内容。归根到底CALayer是这一切的基础，如果没有CALayer，UIView自身也不会存在，UIView是一个特殊的CALayer实现，添加了响应事件的能力。
 
+关系：
+* UIView对象中的layer指向一个CALayer变量
+
+* UIView对象中的backgroundColor属性，是对CALayer同名属性的封装。
+
+* UIView展示部分是由CALayer中的contents来决定。contents对应的backing store其实是一个bitmap的位图。
+区别：
+* UIView为其提供内容，以及负责处理触摸等事件，参与响应链。
+
+* CALayer负责显示内容contents。
+
 #### 9.Runloop
 [RunLoop](https://blog.ibireme.com/2015/05/18/runloop/)
 
@@ -268,3 +279,21 @@ strong：修饰对象是对该对象进行强引用，外界不能销毁该对�
 * 显式动画就是需要我们明确指定类型、时间等参数来实现效果的动画。例如：CABasicAnimation，CAKeyframeAnimation，CATransitionAnimation，CAAnimationGroup
 * 隐式动画是指我们可以在不设定任何动画类型的情况下，仅仅改变CALayer的一个可做动画的属性，就能实现动画效果。例如： 改变一个控件的颜色，官方默认有0.25的过渡时间，具体可以查看这个[资料](https://cloud.tencent.com/developer/article/1418000)
 
+
+#### 21.TCP和UDP的区别于联系
+* TCP为传输控制层协议，为面向连接、可靠的、点到点的通信；
+
+* UDP为用户数据报协议，非连接的不可靠的点到多点的通信；
+
+* TCP侧重可靠传输，UDP侧重快速传输。
+
+#### 22.网络七层协议
+
+* 应用层： 1.用户接口、应用程序； 2.Application典型设备：网关； 3.典型协议、标准和应用：TELNET、FTP、HTTP
+
+* 表示层： 1.数据表示、压缩和加密presentation 2.典型设备：网关 3.典型协议、标准和应用：ASCLL、PICT、TIFF、JPEG|MPEG 4.表示层相当于一个东西的表示，表示的一些协议，比如图片、声音和视频MPEG。
+* 会话层： 1.会话的建立和结束； 2.典型设备：网关； 3.典型协议、标准和应用：RPC、SQL、NFS、X WINDOWS、ASP
+* 传输层： 1.主要功能：端到端控制Transport； 2.典型设备：网关； 3.典型协议、标准和应用：TCP、UDP、SPX
+* 网络层： 1.主要功能：路由、寻址Network； 2.典型设备：路由器； 3.典型协议、标准和应用：IP、IPX、APPLETALK、ICMP；
+* 数据链路层： 1.主要功能：保证无差错的疏忽链路的data link； 2.典型设备：交换机、网桥、网卡； 3.典型协议、标准和应用：802.2、802.3ATM、HDLC、FRAME RELAY；
+* 物理层： 1.主要功能：传输比特流Physical； 2.典型设备：集线器、中继器 3.典型协议、标准和应用：V.35、EIA/TIA-232.
