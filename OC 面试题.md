@@ -297,3 +297,18 @@ strong：修饰对象是对该对象进行强引用，外界不能销毁该对�
 * 网络层： 1.主要功能：路由、寻址Network； 2.典型设备：路由器； 3.典型协议、标准和应用：IP、IPX、APPLETALK、ICMP；
 * 数据链路层： 1.主要功能：保证无差错的疏忽链路的data link； 2.典型设备：交换机、网桥、网卡； 3.典型协议、标准和应用：802.2、802.3ATM、HDLC、FRAME RELAY；
 * 物理层： 1.主要功能：传输比特流Physical； 2.典型设备：集线器、中继器 3.典型协议、标准和应用：V.35、EIA/TIA-232.
+
+#### 23.Category 为什么不能添加成员变量
+Category 不能添加成员变量，但是可以添加属性，但是属性要手动实现setter和getter方法（runtime关联对象）。
+
+* 在Objective-C提供的runtime函数中，确实有一个`lass_addIvar()`
+函数用于给类添加成员变量，但是文档中特别说明：`This function may only be called after objc_allocateClassPair and before objc_registerClassPair. Adding an instance variable to an existing class is not supported.`
+意思是说，这个函数只能在“构建一个类的过程中”调用。一旦完成类定义，就不能再添加成员变量了。经过编译的类在程序启动后就被runtime加载，没有机会调用addIvar。程序在运行时动态构建的类需要在调用objc_registerClassPair
+之后才可以被使用，同样没有机会再添加成员变量。
+
+* runtime头文件中`category_t`中少了 `struct objc_ivar_list * _Nullable ivars`也就是说没有存储ivar数组(成员变量数组)
+结合category与原类的结合时机总结：分类并不会改变原有类的内存分布的情况，它是在运行期间决定的，此时内存的分布已经确定，若此时再添加实例会改变内存的分布情况，这对编译性语言是灾难，是不允许的。
+
+* Category为什么能直接添加方法和属性：
+
+    - 因为方法和属性并不“属于”类实例，而成员变量“属于”类实例。我们所说的“类实例”概念，指的是一块内存区域，包含了isa指针和所有的成员变量。所以假如允许动态修改类成员变量布局，已经创建出的类实例就不符合类定义了，变成了无效对象。但方法定义是在objc_class中管理的，不管如何增删类方法，都不影响类实例的内存布局，已经创建出的类实例仍然可正常使用。
