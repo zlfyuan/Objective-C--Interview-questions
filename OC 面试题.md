@@ -382,3 +382,13 @@ Category 不能添加成员变量，但是可以添加属性，但是属性要�
     - 线程越多，CPU在调用线程上的开销就越大（因为要在线程之间切换）；
 
     - 多线程编程的程序设计会更加复杂（如线程间的通信、多线程的数据共享等）。使用不当，可能会带来更多的bug
+#### 30. objc 消息传递的完整过程：
+
+* 判断接受者是否为空？ 如果为空，调用nil-handler, 默认为什么都不做。
+* 检查class的方法调用cache，是否调用过此方法。
+* 检查方法列表是否有此方法，有则调用。
+* 检查父类方法列表是否有此方法，有则调用。（如果一直找不到会找到最根的父类如NSObject, NSProxy）
+* resolveInstanceMethod:
+* forwardingTargetForSelector: 此处不要返回self, 否则会产生循环。
+* methodSignatureForSelector:, 如果返回非nil，创建一个NSInvocation 并传递给forwardInvocation.
+* 调用doesNotRecognizeSelector: 默认实现为抛一个异常。
