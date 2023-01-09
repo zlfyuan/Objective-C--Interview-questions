@@ -210,7 +210,8 @@
 
 * ARC 环境下，autorelease 对象在什么时候释放？
     - 系统干预释放: 由`RunLoop`控制的，会在当前`RunLoop`每次循环结束时释放。
-    - 手动干预释: 在`@autoreleasepool`大括号结束时就会释放，不受`RunLoop`控制。
+    - 手动干预释放: 在`@autoreleasepool`大括号结束时就会释放，不受`RunLoop`控制。
+    - 子线程释放: 如果子线程没有开启Runloop，就是子线程销毁的时候释放
 
 * @autoreleasepool 使用场景 （Apple文档描述）
     - ① 如果你编写的程序不是基于 UI 框架的，比如说命令行工具；
